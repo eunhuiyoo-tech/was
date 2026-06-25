@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>김비서 - 업무 대시보드</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9ff;
+      --card-bg: rgba(255, 255, 255, 0.7);
+      --text-primary: #1a1a1a;
+      --text-secondary: #666;
+      --accent: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+      --shadow-hover: 0 12px 40px rgba(31, 38, 135, 0.25);
+      --border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    html.dark-mode {
+      --bg-primary: #0f0f23;
+      --bg-secondary: #1a1a3a;
+      --card-bg: rgba(255, 255, 255, 0.08);
+      --text-primary: #e0e0e0;
+      --text-secondary: #b0b0b0;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      --shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
+      --border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+      color: var(--text-primary);
+      transition: background 0.3s ease, color 0.3s ease;
+      min-height: 100vh;
+    }
+
+    html.dark-mode body {
+      background: linear-gradient(135deg, #16213e 0%, #0f0f23 100%);
+    }
+
+    .header {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .header a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      background: transparent;
+    }
+
+    .header a:hover {
+      background: var(--card-bg);
+      color: var(--text-primary);
+    }
+
+    .theme-toggle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      box-shadow: var(--shadow);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 30px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+      border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    .card h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* 할 일 목록 */
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+    }
+
+    .task-item:hover {
+      background: rgba(102, 126, 234, 0.05);
+      padding: 12px 8px;
+      border-radius: 8px;
+      margin: 0 -8px;
+    }
+
+    .task-item:last-child {
+      border-bottom: none;
+    }
+
+    .task-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin-top: 2px;
+      cursor: pointer;
+      accent-color: #667eea;
+    }
+
+    .task-content {
+      flex: 1;
+    }
+
+    .task-title {
+      font-weight: 500;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-primary);
+    }
+
+    .priority-badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .priority-high {
+      background: rgba(196, 30, 58, 0.15);
+      color: #c41e3a;
+    }
+
+    html.dark-mode .priority-high {
+      background: rgba(196, 30, 58, 0.25);
+    }
+
+    .priority-medium {
+      background: rgba(230, 126, 34, 0.15);
+      color: #e67e22;
+    }
+
+    html.dark-mode .priority-medium {
+      background: rgba(230, 126, 34, 0.25);
+    }
+
+    .priority-low {
+      background: rgba(0, 102, 204, 0.15);
+      color: #0066cc;
+    }
+
+    html.dark-mode .priority-low {
+      background: rgba(0, 102, 204, 0.25);
+    }
+
+    .task-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* 주간 일정 */
+    .schedule-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .schedule-table th {
+      background: var(--card-bg);
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+      border-bottom: 2px solid var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .schedule-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .schedule-table tr:hover {
+      background: rgba(102, 126, 234, 0.05);
+    }
+
+    .time {
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    /* 프로젝트 진행률 */
+    .project-item {
+      margin-bottom: 20px;
+    }
+
+    .project-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .project-name {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .project-percent {
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: var(--border-color);
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      border-radius: 6px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 12px rgba(102, 126, 234, 0.4);
+    }
+
+    /* 매출 요약 */
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+    }
+
+    .summary-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .summary-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      transition: all 0.6s ease;
+    }
+
+    .summary-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
+    }
+
+    .summary-card:hover::before {
+      top: 0;
+      right: 0;
+    }
+
+    .summary-card h3 {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      opacity: 0.95;
+      position: relative;
+      z-index: 1;
+    }
+
+    .summary-card .value {
+      font-size: 24px;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (max-width: 1000px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header {
+        padding: 15px 20px;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .header-nav {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+
+    /* 탭 메뉴 */
+    .tabs-nav {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0;
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      backdrop-filter: blur(10px);
+    }
+
+    .tabs-nav a {
+      flex: 1;
+      min-width: 150px;
+      padding: 16px 24px;
+      text-align: center;
+      text-decoration: none;
+      color: var(--text-secondary);
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      font-size: 14px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .tabs-nav a:hover {
+      color: var(--text-primary);
+      background: rgba(102, 126, 234, 0.05);
+    }
+
+    .tabs-nav a.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+      background: rgba(102, 126, 234, 0.08);
+    }
+
+    @media (max-width: 600px) {
+      .header h1 {
+        font-size: 20px;
+      }
+
+      .card {
+        padding: 20px;
+      }
+
+      .summary-cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .tabs-nav a {
+        min-width: 120px;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 업무 대시보드</h1>
+    <div class="header-nav">
+      <a href="../etc/index.html">← 메인</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+    </div>
+  </div>
+
+  <div class="tabs-nav">
+    <a href="./dashboard.html" class="tab-link" data-page="dashboard">📋 할 일</a>
+    <a href="../reports/meeting-result.html" class="tab-link" data-page="meeting">📝 회의록</a>
+    <a href="../chart.html" class="tab-link" data-page="chart">📊 매출 현황</a>
+    <a href="../diagram.svg" class="tab-link" data-page="diagram">🔄 업무 프로세스</a>
+    <a href="../report.html" class="tab-link" data-page="report">📈 사이트 분석</a>
+  </div>
+
+  <div class="container">
+    <div class="grid">
+      <!-- 할 일 목록 -->
+      <div class="card">
+        <h2>📋 할 일 목록</h2>
+
+        <div class="task-item">
+          <input type="checkbox">
+          <div class="task-content">
+            <div class="task-title">
+              3월 프로모션 기획안 작성
+              <span class="priority-badge priority-high">높음</span>
+            </div>
+            <div class="task-meta">담당: 김대리 | 마감: 2026-03-12 | 진행중</div>
+          </div>
+        </div>
+
+        <div class="task-item">
+          <input type="checkbox">
+          <div class="task-content">
+            <div class="task-title">
+              인플루언서 미팅 일정 잡기
+              <span class="priority-badge priority-high">높음</span>
+            </div>
+            <div class="task-meta">담당: 이과장 | 마감: 2026-03-14 | 대기</div>
+          </div>
+        </div>
+
+        <div class="task-item">
+          <input type="checkbox">
+          <div class="task-content">
+            <div class="task-title">
+              영상 광고 3개 추가 제작
+              <span class="priority-badge priority-medium">보통</span>
+            </div>
+            <div class="task-meta">담당: 박사원 | 마감: 2026-03-14 | 진행중</div>
+          </div>
+        </div>
+
+        <div class="task-item">
+          <input type="checkbox">
+          <div class="task-content">
+            <div class="task-title">
+              경쟁사 C사 캠페인 분석
+              <span class="priority-badge priority-medium">보통</span>
+            </div>
+            <div class="task-meta">담당: 박사원 | 마감: 2026-03-16 | 대기</div>
+          </div>
+        </div>
+
+        <div class="task-item">
+          <input type="checkbox">
+          <div class="task-content">
+            <div class="task-title">
+              4월 신제품 티저 콘텐츠 기획
+              <span class="priority-badge priority-high">높음</span>
+            </div>
+            <div class="task-meta">담당: 정팀장 | 마감: 2026-03-21 | 대기</div>
+          </div>
+        </div>
+
+        <div class="task-item">
+          <input type="checkbox" checked style="opacity: 0.6;">
+          <div class="task-content">
+            <div class="task-title" style="opacity: 0.6; text-decoration: line-through;">
+              SNS 계정 주간 콘텐츠 업로드
+              <span class="priority-badge priority-medium">보통</span>
+            </div>
+            <div class="task-meta" style="opacity: 0.6;">담당: 김대리 | 마감: 2026-03-10 | ✓ 완료</div>
+          </div>
+        </div>
+
+        <div class="task-item">
+          <input type="checkbox">
+          <div class="task-content">
+            <div class="task-title">
+              블로그 포스트 2건 작성
+              <span class="priority-badge priority-low">낮음</span>
+            </div>
+            <div class="task-meta">담당: 이과장 | 마감: 2026-03-18 | 대기</div>
+          </div>
+        </div>
+
+        <div class="task-item">
+          <input type="checkbox">
+          <div class="task-content">
+            <div class="task-title">
+              고객 설문조사 결과 분석
+              <span class="priority-badge priority-medium">보통</span>
+            </div>
+            <div class="task-meta">담당: 정팀장 | 마감: 2026-03-13 | 진행중</div>
+          </div>
+        </div>
+
+        <div class="task-item">
+          <input type="checkbox">
+          <div class="task-content">
+            <div class="task-title">
+              파트너사 계약서 검토
+              <span class="priority-badge priority-high">높음</span>
+            </div>
+            <div class="task-meta">담당: 정팀장 | 마감: 2026-03-11 | 대기</div>
+          </div>
+        </div>
+
+        <div class="task-item">
+          <input type="checkbox">
+          <div class="task-content">
+            <div class="task-title">
+              월간 마케팅 보고서 작성
+              <span class="priority-badge priority-high">높음</span>
+            </div>
+            <div class="task-meta">담당: 김대리 | 마감: 2026-03-31 | 대기</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 이번 주 일정 -->
+      <div class="card">
+        <h2>📅 이번 주 일정</h2>
+        <table class="schedule-table">
+          <thead>
+            <tr>
+              <th style="width: 80px;">요일</th>
+              <th>시간</th>
+              <th>일정</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>월</strong></td>
+              <td><span class="time">10:00</span></td>
+              <td>마케팅팀 주간회의</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td><span class="time">14:00</span></td>
+              <td>신제품 런칭 킥오프 미팅</td>
+            </tr>
+            <tr>
+              <td><strong>화</strong></td>
+              <td><span class="time">09:00</span></td>
+              <td>3월 프로모션 기획안 마감</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td><span class="time">11:00</span></td>
+              <td>디자인팀 협업 미팅</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td><span class="time">15:00</span></td>
+              <td>파트너사 계약서 검토</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td><span class="time">19:00</span></td>
+              <td>클로드 코드 워크숍 참석</td>
+            </tr>
+            <tr>
+              <td><strong>수</strong></td>
+              <td><span class="time">10:00</span></td>
+              <td>인플루언서 미팅 (푸드스타일리)</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td><span class="time">14:00</span></td>
+              <td>고객 설문 결과 공유 미팅</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td><span class="time">16:00</span></td>
+              <td>콘텐츠 편집 회의</td>
+            </tr>
+            <tr>
+              <td><strong>목</strong></td>
+              <td><span class="time">09:30</span></td>
+              <td>영상 광고 촬영 (스튜디오)</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td><span class="time">13:00</span></td>
+              <td>점심 미팅 — 광고 대행사</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td><span class="time">15:00</span></td>
+              <td>SNS 콘텐츠 리뷰</td>
+            </tr>
+            <tr>
+              <td><strong>금</strong></td>
+              <td><span class="time">10:00</span></td>
+              <td>유튜브 채널 리뉴얼 최종 검토</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td><span class="time">14:00</span></td>
+              <td>주간 성과 리뷰</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td><span class="time">16:00</span></td>
+              <td>다음 주 콘텐츠 캘린더 확정</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 프로젝트 진행률 -->
+      <div class="card">
+        <h2>📈 프로젝트 진행률</h2>
+
+        <div class="project-item">
+          <div class="project-header">
+            <span class="project-name">봄맞이 프로모션</span>
+            <span class="project-percent">65%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 65%"></div>
+          </div>
+        </div>
+
+        <div class="project-item">
+          <div class="project-header">
+            <span class="project-name">신제품 런칭 캠페인</span>
+            <span class="project-percent">20%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 20%"></div>
+          </div>
+        </div>
+
+        <div class="project-item">
+          <div class="project-header">
+            <span class="project-name">인플루언서 협업</span>
+            <span class="project-percent">35%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 35%"></div>
+          </div>
+        </div>
+
+        <div class="project-item">
+          <div class="project-header">
+            <span class="project-name">유튜브 채널 리뉴얼</span>
+            <span class="project-percent">80%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 80%"></div>
+          </div>
+        </div>
+
+        <div class="project-item">
+          <div class="project-header">
+            <span class="project-name">고객 리텐션 프로그램</span>
+            <span class="project-percent">10%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 10%"></div>
+          </div>
+        </div>
+
+        <div class="project-item">
+          <div class="project-header">
+            <span class="project-name">홈페이지 리뉴얼</span>
+            <span class="project-percent">45%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 45%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 매출 요약 -->
+      <div class="card">
+        <h2>💰 매출 요약</h2>
+        <div class="summary-cards">
+          <div class="summary-card">
+            <h3>1월 누적</h3>
+            <div class="value">21.1M</div>
+          </div>
+          <div class="summary-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <h3>2월 누적</h3>
+            <div class="value">14.6M</div>
+          </div>
+          <div class="summary-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <h3>총 매출</h3>
+            <div class="value">35.7M</div>
+          </div>
+          <div class="summary-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <h3>평균/월</h3>
+            <div class="value">17.9M</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 테마 토글
+    const themeToggle = document.getElementById('themeToggle');
+    const html = document.documentElement;
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    if (savedTheme === 'dark') {
+      html.classList.add('dark-mode');
+      themeToggle.textContent = '☀️';
+    }
+
+    themeToggle.addEventListener('click', () => {
+      html.classList.toggle('dark-mode');
+      const isDarkMode = html.classList.contains('dark-mode');
+      localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+      themeToggle.textContent = isDarkMode ? '☀️' : '🌙';
+    });
+
+    // 탭 메뉴 활성화
+    function setActiveTab() {
+      const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+      const tabLinks = document.querySelectorAll('.tab-link');
+
+      tabLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        const linkPage = href.split('/').pop();
+
+        if (linkPage === currentPage || (currentPage === '' && href.includes('dashboard'))) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+    }
+
+    setActiveTab();
+  </script>
+</body>
+</html>
