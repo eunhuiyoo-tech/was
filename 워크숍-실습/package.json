@@ -1,0 +1,23 @@
+{
+  "name": "kim-secretary-dashboard",
+  "version": "1.0.0",
+  "description": "업무 효율화 대시보드 및 웹사이트 분석 프로젝트",
+  "main": "etc/index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "dev": "python -m http.server 8000",
+    "build": "echo \"No build required for static site\""
+  },
+  "keywords": [
+    "dashboard",
+    "task-management",
+    "analytics",
+    "web-analysis"
+  ],
+  "author": "eunhuiyoo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eunhuiyoo-tech/kim-secretary-dashboard.git"
+  }
+}
